@@ -29,6 +29,8 @@ def create_spring(x, y):
 
 
 def game_over_screen(current_score, max_score):
+    lose = pygame.mixer.music.load('data/lose.mp3')
+    pygame.mixer.music.play(-1)
     screen.blit(background_finish, (0, 0))
     game_over_image = pygame.image.load("data/game over-PhotoRoom.png-PhotoRoom.png")
     screen.blit(game_over_image, (0, height - game_over_image.get_height()))  # Display at the bottom
@@ -211,6 +213,8 @@ def loop_game():
     maxScore = 0
     level = 1
 
+    lose = pygame.mixer.music.load("data/lose.mp3")
+
     level2Limit = 4000
 
     while True:
@@ -233,6 +237,7 @@ def loop_game():
             maxScore = max(maxScore, current_score)
             save_user_data(username, maxScore)
             if game_over_screen(current_score, maxScore):
+
                 doodler.rect.y = doodlerY
                 counter = 0
                 level = 1
