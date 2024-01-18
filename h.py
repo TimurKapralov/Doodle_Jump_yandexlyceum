@@ -154,21 +154,21 @@ def loop_game():
     width = screen.get_width()
     height = screen.get_height()
 
-    doodlerRightImage = "doodler.png"
-    doodlerLeftImage = "doodler1.png"
-    springImage = "spring.png"
+    doodlerRightImage = "data/doodler.png"
+    doodlerLeftImage = "data/doodler1.png"
+    springImage = "data/spring.png"
     back = random.randint(1, 3)
     if back == 1:
-        backgroundImage = "fon2.jpg"
+        backgroundImage = "data/fon2.jpg"
     elif back == 2:
-        backgroundImage = "Fonfutboll.jpg"
+        backgroundImage = "data/Fonfutboll.jpg"
     else:
-        backgroundImage = "SnowFon.jpg"
+        backgroundImage = "data/SnowFon.jpg"
     plat = random.randint(1, 2)
     if plat == 1:
-        platformImage = "Платформа.png"
+        platformImage = "data/Платформа.png"
     else:
-        platformImage = "Платформа1.png"
+        platformImage = "data/Платформа1.png"
 
     doodler_right = pygame.image.load(doodlerLeftImage)
     doodler_left = pygame.image.load(doodlerRightImage)
@@ -346,7 +346,7 @@ vel_y = 40
 clock = pygame.time.Clock()
 fps = 25
 
-button_image = "button.png"
+button_image = "data/button.png"
 # button_image = pygame.transform.scale(button_image, (100, 50))
 
 
