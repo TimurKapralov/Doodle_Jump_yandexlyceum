@@ -213,8 +213,6 @@ def loop_game():
     maxScore = 0
     level = 1
 
-    lose = pygame.mixer.music.load("data/lose.mp3")
-
     level2Limit = 4000
 
     while True:
