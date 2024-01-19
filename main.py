@@ -8,10 +8,9 @@ import tkinter.simpledialog
 class Button:
     def __init__(self, x, y, image_path):
         self.image = pygame.image.load(image_path)
+        self.image = pygame.transform.scale(self.image, (125, 62))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
-        self.image = pygame.transform.scale(self.image, (125, 62))
-
     def draw(self, surface):
         surface.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -30,10 +29,10 @@ def create_spring(x, y):
 
 def game_over_screen(current_score, max_score):
     lose = pygame.mixer.music.load('data/lose.mp3')
-    pygame.mixer.music.play(-1)
-    screen.blit(background_finish, (0, 0))
+    pygame.mixer.music.play(1)
+    # screen.blit(background_finish, (0, 0))
     game_over_image = pygame.image.load("data/game over-PhotoRoom.png-PhotoRoom.png")
-    screen.blit(game_over_image, (0, height - game_over_image.get_height()))  # Display at the bottom
+    screen.blit(game_over_image, (100, 200))  # Display at the bottom
 
     # Счёт под конец игры и максимальный счёт
     font = pygame.font.Font(None, 46)
@@ -234,8 +233,8 @@ def loop_game():
             current_score = counter
             maxScore = max(maxScore, current_score)
             save_user_data(username, maxScore)
+            screen.blit(background, (0, 0))
             if game_over_screen(current_score, maxScore):
-
                 doodler.rect.y = doodlerY
                 counter = 0
                 level = 1
@@ -245,6 +244,12 @@ def loop_game():
                     platforms[i].kill()
                 doodler = doodler_init()
                 platforms, directions = platforms_init()
+                mus = random.randint(1, 2)
+                if mus == 1:
+                    music = pygame.mixer.music.load("data/Doodlemusic.mp3")
+                else:
+                    music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
+                pygame.mixer.music.play(-1)
 
         if counter >= level2Limit:
             level = 2
@@ -353,7 +358,7 @@ button_image = "data/button.png"
 # button_image = pygame.transform.scale(button_image, (100, 50))
 
 
-button = Button(100, 150, button_image)
+button = Button(100, 200, button_image)
 
 # Функция для отображения текста на экране
 
