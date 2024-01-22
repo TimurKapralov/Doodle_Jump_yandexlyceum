@@ -1,9 +1,15 @@
-import pygame
-import sys
 import random
+import sqlite3
 import tkinter as tk
-from tkinter import messagebox
 import tkinter.simpledialog
+from tkinter import messagebox
+from tkinter import ttk
+
+import pygame
+
+conn = sqlite3.connect('data/data_us')
+cursor = conn.cursor()
+
 
 class Button:
     def __init__(self, x, y, image_path):
@@ -11,6 +17,7 @@ class Button:
         self.image = pygame.transform.scale(self.image, (125, 62))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+
     def draw(self, surface):
         surface.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -18,17 +25,13 @@ class Button:
         return self.rect.collidepoint(mouse_pos)
 
 
-def create_spring(x, y):
-    spring = pygame.sprite.Sprite()  # Replace with your actual spring sprite creation code
-    spring.image = pygame.image.load('data/spring.png') # Replace with your actual spring image
-    spring.rect = spring.image.get_rect()
-    spring.rect.x = x
-    spring.rect.y = y
-    return spring
-
-
 def game_over_screen(current_score, max_score):
     lose = pygame.mixer.music.load('data/lose.mp3')
+
+    if max_score > int(cursor.execute("SELECT * FROM scores WHERE username=?",
+                                      (username,)).fetchall()[0][1]):
+        cursor.execute("UPDATE scores SET max_score=? WHERE username=?", (max_score, username))
+        conn.commit()
     pygame.mixer.music.play(1)
     # screen.blit(background_finish, (0, 0))
     game_over_image = pygame.image.load("data/game over-PhotoRoom.png-PhotoRoom.png")
@@ -55,6 +58,7 @@ def game_over_screen(current_score, max_score):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                conn.close()
                 return False  # конец
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -65,49 +69,85 @@ def game_over_screen(current_score, max_score):
     return True  # рестарт
 
 
-def get_username():
-    name = ''
-    while not name:
-        name = tk.simpledialog.askstring("Имя", "Как вас зовут?")
-    if name:
-        tk.messagebox.showinfo("Приветствие", f"Привет, {name}!")
-
-    username = name
-    root = tk.Tk()
-    root.geometry("300x200")
+def get_new_name():
+    global root, combo_box, username
+    new_name = name_entry.get()
+    cur = combo_box.get()
+    if new_name:
+        username = new_name
+        while True:
+            try:
+                cursor.execute("INSERT INTO scores VALUES(?, ?)", (username, 0))
+                conn.commit()
+                break
+            except sqlite3.IntegrityError:
+                tk.messagebox.showinfo("Внимание", f"Данное имя уже зарегистрировано. Введите новое!😀")
+        combo_box['values'] = cursor.execute("SELECT username FROM scores").fetchall()
+        combo_box.current(0)
+    else:
+        username = cur
     root.destroy()
-    return username
+
+
+def clear_text_entry_tk():
+    name_entry.delete(0, len(name_entry.get()))
+
+
+def to_game():
+    global name_entry, combo_box, root
+    root = tk.Tk()
+    root.title("Всплывающее окно")
+
+    button = tk.Button(root, text="Подтвердить", command=get_new_name)
+    combo_box = ttk.Combobox(root, values=cursor.execute("SELECT username FROM scores").fetchall(),
+                             state='readonly', postcommand=clear_text_entry_tk)
+    try:
+        combo_box.current(0)
+    except tkinter.TclError:
+        pass
+
+    label1 = tk.Label(root, text="ИЛИ")
+    label2 = tk.Label(root, text='Введите новое имя пользователя:')
+    combo_label = tk.Label(root, text="Выберите пользователя:")
+
+    name_entry = tk.Entry(root)
+    combo_label.pack()
+    combo_box.pack()
+    label1.pack()
+    label2.pack()
+    name_entry.pack()
+    button.pack()
+
+    root.mainloop()
+
 
 def save_user_data(username, score):
-    # Записываем данные в файл user.txt
-    with open('data/user.txt', 'w') as f:
-        f.write(str(username) + '\n')
-        f.write(str(score) + '\n')
+    cursor.execute("UPDATE scores SET max_score = ? WHERE username = ?",
+                   (score, username))
+    conn.commit()
+
 
 def load_user_data():
-    # Читаем данные из файла user.txt
-    with open('data/user.txt', 'r') as f:
-        lines = f.readlines()
-        username = lines[0].strip()
-        max_score = int(lines[1].strip())
-        return username, max_score
+    global username
+    outy = cursor.execute("SELECT username, max_score FROM scores WHERE username=?",
+                          (username,)).fetchall()
+    return outy[0][0], int(outy[0][1])
+
 
 def loop_game():
     game_over_y = 1000
     score_y = 1000
     max_score_y = 1000
+
     def create_platform(x, y):
         platform = pygame.sprite.Sprite(platform_sprites)
         platform.image = platform_main
         platform.rect = platform.image.get_rect()
+
         if x == -1:
             x = random.randint(minX, maxX)
         platform.rect.x = x
         platform.rect.y = y
-
-        # # if random.random() < 0.1:
-        # spring = create_spring(x, y - 20)
-        # platform_sprites.add(spring)
 
         return platform
 
@@ -227,6 +267,7 @@ def loop_game():
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 pygame.quit()
+                conn.close()
 
         if doodler.rect.y > height:
             # maxScore
@@ -306,21 +347,7 @@ def loop_game():
         clock.tick(fps)
 
 
-try:
-    with open('data/user.txt', 'r') as f:
-        lines = f.readlines()
-        if len(lines) > 0:
-            username, maxScore = load_user_data()
-        else:
-            username = get_username()
-            maxScore = 0
-            save_user_data(username, maxScore)
-except FileNotFoundError:
-    username = get_username()
-    maxScore = 0
-    save_user_data(username, maxScore)
-
-
+to_game()
 pygame.init()
 pygame.display.set_caption('Doodle Jump')
 res = (530, 750)
@@ -343,6 +370,7 @@ background_finish = pygame.image.load("data/fon2.jpg")
 background_finish = pygame.transform.scale(background_finish, res)
 
 all_sprites = pygame.sprite.Group()
+spring_sprites = pygame.sprite.Group()
 doodler = pygame.sprite.Sprite(all_sprites)
 doodler.image = pygame.image.load("data/doodler.png")
 doodler.rect = doodler.image.get_rect()
@@ -371,6 +399,7 @@ while True:
     for ev in pygame.event.get():
         if ev.type == pygame.QUIT:
             pygame.quit()
+            conn.close()
         if ev.type == pygame.MOUSEBUTTONDOWN:
             if button.is_clicked(pygame.mouse.get_pos()):
                 loop_game()
@@ -382,11 +411,8 @@ while True:
     if vel_y < -40:
         vel_y = 40
 
-
-
     pygame.display.update()
     clock.tick(fps)
 
     # Проверка нажатия на кнопку
     mouse_pos = pygame.mouse.get_pos()
-
