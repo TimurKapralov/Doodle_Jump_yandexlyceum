@@ -1,7 +1,6 @@
 import random
 import sqlite3
 import tkinter as tk
-import tkinter.simpledialog
 from tkinter import messagebox
 from tkinter import ttk
 
@@ -33,8 +32,12 @@ def game_over_screen(current_score, max_score):
         cursor.execute("UPDATE scores SET max_score=? WHERE username=?", (max_score, username))
         conn.commit()
     pygame.mixer.music.play(1)
-    # screen.blit(background_finish, (0, 0))
     game_over_image = pygame.image.load("data/game over-PhotoRoom.png-PhotoRoom.png")
+    screen = pygame.display.set_mode((530, 750))
+    background_finish = pygame.image.load("data/fon2.jpg")
+    screen.blit(background_finish, (0, 0))
+    width = screen.get_width()
+    height = screen.get_height()
     screen.blit(game_over_image, (100, 200))  # Display at the bottom
 
     # Счёт под конец игры и максимальный счёт
@@ -64,7 +67,7 @@ def game_over_screen(current_score, max_score):
                 if event.key == pygame.K_SPACE:
                     waiting_for_restart = False
                 if event.key == pygame.K_ESCAPE:
-                    pass
+                    init_main()
 
     return True  # рестарт
 
@@ -72,16 +75,22 @@ def game_over_screen(current_score, max_score):
 def get_new_name():
     global root, combo_box, username
     new_name = name_entry.get()
-    cur = combo_box.get()
+    if cursor.execute("SELECT username FROM scores").fetchall():
+        cur = combo_box.get()
     if new_name:
         username = new_name
-        while True:
-            try:
-                cursor.execute("INSERT INTO scores VALUES(?, ?)", (username, 0))
-                conn.commit()
-                break
-            except sqlite3.IntegrityError:
-                tk.messagebox.showinfo("Внимание", f"Данное имя уже зарегистрировано. Введите новое!😀")
+        namers = list(el[0] for el in cursor.execute("SELECT username FROM scores").fetchall())
+        print(namers)
+        if username in namers:
+            tk.messagebox.showinfo("Внимание", f"Данное имя уже зарегистрировано. Введите новое!😀")
+            pygame.quit()
+            conn.close()
+            quit()
+        else:
+            print(0)
+            cursor.execute("INSERT INTO scores VALUES(?, ?)", (username, 0))
+            conn.commit()
+
         combo_box['values'] = cursor.execute("SELECT username FROM scores").fetchall()
         combo_box.current(0)
     else:
@@ -96,15 +105,20 @@ def clear_text_entry_tk():
 def to_game():
     global name_entry, combo_box, root
     root = tk.Tk()
-    root.title("Всплывающее окно")
+    x = (root.winfo_screenwidth() - root.winfo_reqwidth()) / 2
+    y = (root.winfo_screenheight() - root.winfo_reqheight()) / 2
+    root.wm_geometry("+%d+%d" % (x, y))
+    root.title('Выберите пользователя:')
 
     button = tk.Button(root, text="Подтвердить", command=get_new_name)
-    combo_box = ttk.Combobox(root, values=cursor.execute("SELECT username FROM scores").fetchall(),
-                             state='readonly', postcommand=clear_text_entry_tk)
-    try:
-        combo_box.current(0)
-    except tkinter.TclError:
-        pass
+    names = cursor.execute("SELECT username FROM scores").fetchall()
+    if names:
+        combo_box = ttk.Combobox(root, values=names,
+                                 state='readonly', postcommand=clear_text_entry_tk)
+    # try:
+    #     combo_box.current(0)
+    # except tkinter.TclError:
+    #     pass
 
     label1 = tk.Label(root, text="ИЛИ")
     label2 = tk.Label(root, text='Введите новое имя пользователя:')
@@ -112,12 +126,12 @@ def to_game():
 
     name_entry = tk.Entry(root)
     combo_label.pack()
-    combo_box.pack()
+    if names:
+        combo_box.pack()
     label1.pack()
     label2.pack()
     name_entry.pack()
     button.pack()
-
     root.mainloop()
 
 
@@ -257,6 +271,7 @@ def loop_game():
     while True:
         screen.blit(background, (0, 0))
         username, maxScore = load_user_data()
+
         text1 = font.render(f'score = {counter}', 1, (0, 0, 0))
         text2 = font.render(f'previous_max_score = {maxScore}', 1, (0, 0, 0))
         screen.blit(text1, (10, 10))
@@ -268,6 +283,7 @@ def loop_game():
             if ev.type == pygame.QUIT:
                 pygame.quit()
                 conn.close()
+                exit()
 
         if doodler.rect.y > height:
             # maxScore
@@ -348,71 +364,94 @@ def loop_game():
 
 
 to_game()
-pygame.init()
-pygame.display.set_caption('Doodle Jump')
-res = (530, 750)
-
-screen = pygame.display.set_mode(res)
-
-width = screen.get_width()
-height = screen.get_height()
-
-mus = random.randint(1, 2)
-if mus == 1:
-    music = pygame.mixer.music.load("data/Doodlemusic.mp3")
-else:
-    music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
-
-background_start = pygame.image.load("data/fon.jpg")
-background_start = pygame.transform.scale(background_start, res)
-
-background_finish = pygame.image.load("data/fon2.jpg")
-background_finish = pygame.transform.scale(background_finish, res)
-
-all_sprites = pygame.sprite.Group()
-spring_sprites = pygame.sprite.Group()
-doodler = pygame.sprite.Sprite(all_sprites)
-doodler.image = pygame.image.load("data/doodler.png")
-doodler.rect = doodler.image.get_rect()
-
-doodler.rect.x = 90
-doodler.rect.y = 510
-vel_y = 40
-
-clock = pygame.time.Clock()
-fps = 25
-
-button_image = "data/button.png"
-# button_image = pygame.transform.scale(button_image, (100, 50))
 
 
-button = Button(100, 200, button_image)
+def init_main():
+    pygame.init()
+    res = (530, 750)
 
-# Функция для отображения текста на экране
+    black = (0, 0, 0)
 
-# Константы для кнопки
+    mus = random.randint(1, 2)
+    if mus == 1:
+        music = pygame.mixer.music.load("data/Doodlemusic.mp3")
+    else:
+        music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
 
-while True:
-    screen.blit(background_start, (0, 0))
-    all_sprites.draw(screen)
+    background_start = pygame.image.load("data/fon.jpg")
+    background_start = pygame.transform.scale(background_start, res)
 
-    for ev in pygame.event.get():
-        if ev.type == pygame.QUIT:
-            pygame.quit()
-            conn.close()
-        if ev.type == pygame.MOUSEBUTTONDOWN:
-            if button.is_clicked(pygame.mouse.get_pos()):
-                loop_game()
+    background_finish = pygame.image.load("data/fon2.jpg")
+    background_finish = pygame.transform.scale(background_finish, res)
 
-    # Отрисовка кнопки
-    button.draw(screen)
-    doodler.rect.y -= vel_y
-    vel_y -= 5
-    if vel_y < -40:
-        vel_y = 40
+    all_sprites = pygame.sprite.Group()
+    spring_sprites = pygame.sprite.Group()
+    doodler = pygame.sprite.Sprite(all_sprites)
+    doodler.image = pygame.image.load("data/doodler.png")
+    doodler.rect = doodler.image.get_rect()
 
-    pygame.display.update()
-    clock.tick(fps)
+    doodler.rect.x = 90
+    doodler.rect.y = 510
+    vel_y = 40
 
-    # Проверка нажатия на кнопку
-    mouse_pos = pygame.mouse.get_pos()
+    clock = pygame.time.Clock()
+    fps = 25
+
+    try:
+        pre_text = cursor.execute("SELECT username, max_score FROM scores ORDER BY max_score DESC").fetchall()[0]
+    except IndexError:
+        tk.messagebox.showinfo("Внимание", f"Вам необходимо ввести имя пользователя!😀")
+        pygame.quit()
+        conn.close()
+        exit()
+
+    screen = pygame.display.set_mode(res)
+
+    text = f"max_score is {pre_text[1]} by {pre_text[0]}"
+    fonty = pygame.font.Font(None, 36)
+
+    font = pygame.font.Font(None, 36)
+
+    text_width, text_height = font.size(text)
+
+    x_pos = res[0]
+    y_pos = 630
+
+    button_image = "data/button.png"
+    button = Button(100, 200, button_image)
+
+    while True:
+        screen.blit(background_start, (0, 0))
+        all_sprites.draw(screen)
+
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                pygame.quit()
+                conn.close()
+                exit()
+            if ev.type == pygame.MOUSEBUTTONDOWN:
+                if button.is_clicked(pygame.mouse.get_pos()):
+                    loop_game()
+
+        text_surface = font.render(text, True, black)
+
+        screen.blit(text_surface, (x_pos, y_pos))
+
+        x_pos -= 2
+        if x_pos < -text_width:
+            x_pos = res[0]
+
+        button.draw(screen)
+        doodler.rect.y -= vel_y
+        vel_y -= 5
+        if vel_y < -40:
+            vel_y = 40
+
+        pygame.display.update()
+        clock.tick(fps)
+
+        # Проверка нажатия на кнопку
+        mouse_pos = pygame.mouse.get_pos()
+
+
+init_main()
