@@ -115,10 +115,10 @@ def to_game():
     if names:
         combo_box = ttk.Combobox(root, values=names,
                                  state='readonly', postcommand=clear_text_entry_tk)
-    # try:
-    #     combo_box.current(0)
-    # except tkinter.TclError:
-    #     pass
+    try:
+        combo_box.current(0)
+    except tk.TclError:
+        pass
 
     label1 = tk.Label(root, text="ИЛИ")
     label2 = tk.Label(root, text='Введите новое имя пользователя:')
