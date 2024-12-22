@@ -93,8 +93,6 @@ def get_new_name():
 
         combo_box['values'] = cursor.execute("SELECT username FROM scores").fetchall()
         combo_box.current(0)
-    else:
-        username = cur
     root.destroy()
 
 
@@ -112,9 +110,8 @@ def to_game():
 
     button = tk.Button(root, text="Подтвердить", command=get_new_name)
     names = cursor.execute("SELECT username FROM scores").fetchall()
-    if names:
-        combo_box = ttk.Combobox(root, values=names,
-                                 state='readonly', postcommand=clear_text_entry_tk)
+    combo_box = ttk.Combobox(root, values=names,
+                                state='readonly', postcommand=clear_text_entry_tk)
     try:
         combo_box.current(0)
     except tk.TclError:
@@ -129,7 +126,7 @@ def to_game():
     if names:
         combo_box.pack()
     label1.pack()
-    label2.pack()
+    label2.pack() 
     name_entry.pack()
     button.pack()
     root.mainloop()
