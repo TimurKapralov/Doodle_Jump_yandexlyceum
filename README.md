@@ -9,9 +9,9 @@
 </p>
 
 ### Установка
-- <code>git clone https://github.com/TimurKapralov/Doodle_Jump_yandexlyceum.git</code>
-- <code>pip install -r requirements.txt</code>
-- <code>python main.py</code>
+<code>git clone https://github.com/TimurKapralov/Doodle_Jump_yandexlyceum.git</code>
+<code>pip install -r requirements.txt</code>
+<code>python main.py</code>
 
 ### Управление
 - Используйте стрелки влево и вправо для перемещения персонажа.
