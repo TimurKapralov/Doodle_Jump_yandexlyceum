@@ -303,8 +303,10 @@ def loop_game():
         if doodler.rect.y > height:
             # maxScore
             current_score = counter
-            maxScore = max(maxScore, current_score)
-            save_user_data(username, maxScore)
+            if current_score > maxScore:
+                save_user_data(username, current_score)
+                maxScore = current_score
+                print("saved")
             screen.blit(background, (0, 0))
             if game_over_screen(current_score, maxScore):
                 doodler.rect.y = doodlerY
