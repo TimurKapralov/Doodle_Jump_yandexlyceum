@@ -3,10 +3,18 @@ import sqlite3
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
-
+import os
+import sys
 import pygame
 
-conn = sqlite3.connect('data/data_us')
+
+def resource_path(relative):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative)
+    return os.path.join(relative)
+
+
+conn = sqlite3.connect(resource_path(os.path.join('data', 'data_us')))
 cursor = conn.cursor()
 
 
@@ -25,16 +33,16 @@ class Button:
 
 
 def game_over_screen(current_score, max_score):
-    lose = pygame.mixer.music.load('data/lose.mp3')
+    lose = pygame.mixer.music.load(resource_path(os.path.join('data', 'lose.mp3')))
 
     if max_score > int(cursor.execute("SELECT * FROM scores WHERE username=?",
                                       (username,)).fetchall()[0][1]):
         cursor.execute("UPDATE scores SET max_score=? WHERE username=?", (max_score, username))
         conn.commit()
     pygame.mixer.music.play(1)
-    game_over_image = pygame.image.load("data/game over-PhotoRoom.png-PhotoRoom.png")
+    game_over_image = pygame.image.load(resource_path(os.path.join('data', 'game over-PhotoRoom.png-PhotoRoom.png')))
     screen = pygame.display.set_mode((530, 750))
-    background_finish = pygame.image.load("data/fon2.jpg")
+    background_finish = pygame.image.load(resource_path(os.path.join('data', 'fon2.jpg')))  
     screen.blit(background_finish, (0, 0))
     width = screen.get_width()
     height = screen.get_height()
@@ -76,7 +84,9 @@ def get_new_name():
     global root, combo_box, username
     new_name = name_entry.get()
     if cursor.execute("SELECT username FROM scores").fetchall():
+        # print(cursor.execute("SELECT username FROM scores").fetchall())
         cur = combo_box.get()
+        # print(cur)
     if new_name:
         username = new_name
         namers = list(el[0] for el in cursor.execute("SELECT username FROM scores").fetchall())
@@ -85,7 +95,7 @@ def get_new_name():
             tk.messagebox.showinfo("Внимание", f"Данное имя уже зарегистрировано. Введите новое!😀")
             pygame.quit()
             conn.close()
-            quit()
+            sys.exit()
         else:
             print(0)
             cursor.execute("INSERT INTO scores VALUES(?, ?)", (username, 0))
@@ -93,6 +103,14 @@ def get_new_name():
 
         combo_box['values'] = cursor.execute("SELECT username FROM scores").fetchall()
         combo_box.current(0)
+    else:
+        try:
+            username = cur
+        except UnboundLocalError:
+            tk.messagebox.showinfo("Внимание", f"Вам необходимо ввести имя пользователя!😀")
+            pygame.quit()
+            conn.close()
+            sys.exit()
     root.destroy()
 
 
@@ -195,9 +213,9 @@ def loop_game():
     pygame.init()
     mus = random.randint(1, 2)
     if mus == 1:
-        music = pygame.mixer.music.load("data/Doodlemusic.mp3")
+        music = pygame.mixer.music.load(resource_path(os.path.join('data', 'Doodlemusic.mp3')))
     else:
-        music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
+        music = pygame.mixer.music.load(resource_path(os.path.join('data', 'SUBWAY SURFERS.mp3')))
 
     pygame.mixer.music.play(-1)
     res = (530, 750)
@@ -206,27 +224,27 @@ def loop_game():
     width = screen.get_width()
     height = screen.get_height()
 
-    doodlerRightImage = "data/doodler.png"
-    doodlerLeftImage = "data/doodler1.png"
-    springImage = "data/spring.png"
+    doodlerRightImage = "doodler.png"
+    doodlerLeftImage = "doodler1.png"
+    springImage = "spring.png"
     back = random.randint(1, 3)
     if back == 1:
-        backgroundImage = "data/fon2.jpg"
+        backgroundImage = "fon2.jpg"
     elif back == 2:
-        backgroundImage = "data/Fonfutboll.jpg"
+        backgroundImage = "Fonfutboll.jpg"
     else:
-        backgroundImage = "data/SnowFon.jpg"
+        backgroundImage = "SnowFon.jpg"
     plat = random.randint(1, 2)
     if plat == 1:
-        platformImage = "data/Платформа.png"
+        platformImage = "Платформа.png"
     else:
-        platformImage = "data/Платформа1.png"
+        platformImage = "Платформа1.png"
 
-    doodler_right = pygame.image.load(doodlerLeftImage)
-    doodler_left = pygame.image.load(doodlerRightImage)
-    background = pygame.image.load(backgroundImage)
-    platform_main = pygame.image.load(platformImage)
-    spring_image = pygame.image.load(springImage)
+    doodler_right = pygame.image.load(resource_path(os.path.join('data', doodlerLeftImage)))
+    doodler_left = pygame.image.load(resource_path(os.path.join('data', doodlerRightImage)))
+    background = pygame.image.load(resource_path(os.path.join('data', backgroundImage)))
+    platform_main = pygame.image.load(resource_path(os.path.join('data', platformImage)))
+    spring_image = pygame.image.load(resource_path(os.path.join('data', springImage)))
 
     doodlerX = 300
     doodlerY = 530
@@ -280,7 +298,7 @@ def loop_game():
             if ev.type == pygame.QUIT:
                 pygame.quit()
                 conn.close()
-                exit()
+                sys.exit()
 
         if doodler.rect.y > height:
             # maxScore
@@ -300,9 +318,9 @@ def loop_game():
                 platforms, directions = platforms_init()
                 mus = random.randint(1, 2)
                 if mus == 1:
-                    music = pygame.mixer.music.load("data/Doodlemusic.mp3")
+                    music = pygame.mixer.music.load(resource_path(os.path.join('data', 'Doodlemusic.mp3')))
                 else:
-                    music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
+                    music = pygame.mixer.music.load(resource_path(os.path.join('data', 'SUBWAY SURFERS.mp3')))
                 pygame.mixer.music.play(-1)
 
         if counter >= level2Limit:
@@ -371,20 +389,20 @@ def init_main():
 
     mus = random.randint(1, 2)
     if mus == 1:
-        music = pygame.mixer.music.load("data/Doodlemusic.mp3")
+        music = pygame.mixer.music.load(resource_path(os.path.join('data', 'Doodlemusic.mp3')))
     else:
-        music = pygame.mixer.music.load("data/SUBWAY SURFERS.mp3")
+        music = pygame.mixer.music.load(resource_path(os.path.join('data', 'SUBWAY SURFERS.mp3')))
 
-    background_start = pygame.image.load("data/fon.jpg")
+    background_start = pygame.image.load(resource_path(os.path.join('data', 'fon.jpg')))
     background_start = pygame.transform.scale(background_start, res)
 
-    background_finish = pygame.image.load("data/fon2.jpg")
+    background_finish = pygame.image.load(resource_path(os.path.join('data', 'fon2.jpg')))
     background_finish = pygame.transform.scale(background_finish, res)
 
     all_sprites = pygame.sprite.Group()
     spring_sprites = pygame.sprite.Group()
     doodler = pygame.sprite.Sprite(all_sprites)
-    doodler.image = pygame.image.load("data/doodler.png")
+    doodler.image = pygame.image.load(resource_path(os.path.join('data', 'doodler.png')))
     doodler.rect = doodler.image.get_rect()
 
     doodler.rect.x = 90
@@ -400,7 +418,7 @@ def init_main():
         tk.messagebox.showinfo("Внимание", f"Вам необходимо ввести имя пользователя!😀")
         pygame.quit()
         conn.close()
-        exit()
+        sys.exit()
 
     screen = pygame.display.set_mode(res)
 
@@ -414,7 +432,7 @@ def init_main():
     x_pos = res[0]
     y_pos = 630
 
-    button_image = "data/button.png"
+    button_image =  resource_path(os.path.join('data', 'button.png'))
     button = Button(100, 200, button_image)
 
     while True:
@@ -425,7 +443,7 @@ def init_main():
             if ev.type == pygame.QUIT:
                 pygame.quit()
                 conn.close()
-                exit()
+                sys.exit()
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 if button.is_clicked(pygame.mouse.get_pos()):
                     loop_game()
