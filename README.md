@@ -8,6 +8,11 @@
   <img  width="75" align="right" src="https://media1.giphy.com/media/pScsoBd6sk3Kt9xhI0/giphy.gif?cid=ecf05e47t7i1uqqv2rbuf21e9ovvllxg0pd8bdc0ms6uv39j&ep=v1_stickers_search&rid=giphy.gif&ct=s">
 </p>
 
+### Установка
+<code>git clone https://github.com/TimurKapralov/Doodle_Jump_yandexlyceum.git
+pip install -r requirements.txt
+python main.py</code>
+
 ### Управление
 - Используйте стрелки влево и вправо для перемещения персонажа.
 - Чтобы начать игру, нажмите пробел.
